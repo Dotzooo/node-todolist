@@ -1,4 +1,4 @@
-function errorHandle(res) {
+function errorHandle(res, message = "欄位輸入錯誤")  {
   const HEADER = {
     "Access-Control-Allow-Headers":
       "Content-Type, Authorization, Content-Length, X-Requested-With",
@@ -11,7 +11,7 @@ function errorHandle(res) {
   res.write(
     JSON.stringify({
       status: "error",
-      message: "欄位輸入錯誤",
+      message,
     })
   );
   res.end();

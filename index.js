@@ -1,6 +1,7 @@
 const http = require("http");
 const { v4: uuidv4 } = require("uuid");
 const errorHandle = require("./errorHandle");
+const successHandle = require("./successHandle");
 
 const todos = [
   {
@@ -24,35 +25,21 @@ const reqListener = (req, res) => {
   });
 
   if (req.url === "/todos" && req.method === "GET") {
-    res.writeHead(200, HEADER);
-    res.write(
-      JSON.stringify({
-        status: "success",
-        data: todos,
-      })
-    );
-    res.end();
+    successHandle(res, todos);
   } else if (req.url === "/todos" && req.method === "POST") {
     req.on("end", () => {
       try {
         const { title } = JSON.parse(body);
-
-        if (title !== undefined) {
+        
+        if (title !== undefined && title.trim() !== "") {
           const todo = {
             id: uuidv4(),
             title: title,
           };
           todos.push(todo);
-          res.writeHead(200, HEADER);
-          res.write(
-            JSON.stringify({
-              status: "success",
-              data: todos,
-            })
-          );
-          res.end();
+          successHandle(res, todos);
         } else {
-          errorHandle(res);
+          errorHandle(res, "請填寫代辦事項");
         }
       } catch (error) {
         errorHandle(res);
@@ -65,47 +52,27 @@ const reqListener = (req, res) => {
 
     if (index !== -1) {
       todos.splice(index, 1);
-      res.writeHead(200, HEADER);
-      res.write(
-        JSON.stringify({
-          status: "success",
-          data: todos,
-        })
-      );
-      res.end();
+      successHandle(res, todos);
     } else {
-      errorHandle(res);
+      errorHandle(res, "無此代辦事項，請重新操作");
     }
   } else if (req.url === "/todos" && req.method === "DELETE") {
     todos.length = 0;
-    res.writeHead(200, HEADER);
-    res.write(
-      JSON.stringify({
-        status: "success",
-        data: todos,
-      })
-    );
+
+    successHandle(res, todos);
   } else if (req.url.startsWith("/todos") && req.method === "PATCH") {
     req.on("end", () => {
       try {
         const id = req.url.split("/").pop();
-        
+
         const title = JSON.parse(body).title;
         const index = todos.findIndex((item) => item.id === id);
 
         if (title !== undefined && index !== -1) {
           todos[index].title = title;
-          res.writeHead(200, HEADER);
-          res.write(
-            JSON.stringify({
-              status: "success",
-              data: todos,
-            })
-          );
-
-          res.end();
+          successHandle(res, todos);
         } else {
-          errorHandle(res);
+          errorHandle(res, "無此代辦事項，請重新操作");
         }
       } catch (error) {
         errorHandle(res);
@@ -117,12 +84,10 @@ const reqListener = (req, res) => {
   } else {
     res.writeHead(404, HEADER);
     res.write(
-      res.write(
-        JSON.stringify({
-          status: "false",
-          message: "無此網站路由",
-        })
-      )
+      JSON.stringify({
+        status: "false",
+        message: "無此網站路由",
+      })
     );
     res.end();
   }
